@@ -1,0 +1,4 @@
+Prediction Model,ED,EP
+LR,26.71,32.17
+RF,31.33,30.92
+XGB,28.09,31.58
