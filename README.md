@@ -48,6 +48,11 @@ To ensure the robustness of our findings, we varied the peer identification thre
 This study reveals significant findings in the context of SMEs in the UK. Notably, it highlights that start-ups and micro firms, especially those led by older individuals or those from non-white ethnic backgrounds, often face discrimination in bank decisions and unfairness in algorithmic predictions when applying for loans.
 
 ---
+
+## Important Note
+
+> **Important Note**: Due to file size limitations on GitHub, the resampled data used in each experiment has been uploaded separately. You can access these datasets at the following link: [Resampled Datasets](https://uoe-my.sharepoint.com/:f:/r/personal/s2285280_ed_ac_uk/Documents/Resampled%20datasets?csf=1&web=1&e=R7eAmT).
+
 ## Tools and Version
 
 This project is built on Python 3.10.9.
