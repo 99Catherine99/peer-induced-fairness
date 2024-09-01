@@ -9,7 +9,7 @@ Our framework is a credible, stable, and universal tool that effectively address
 Given its effectiveness and strength, this framework can serve as both an external auditing tool for regulators and third-party auditors, as well as an internal auditing tool for stakeholders.
 
 
-> **For a detailed discussion of the theoretical foundation and methodology, please refer to our related publication: [*Peer-induced Fairness: A Causal Approach to Reveal Algorithmic Unfairness in Credit Approval*](https://arxiv.org/abs/2408.02558) (Fang, Chen, & Ansell, 2024).**
+> **For a detailed discussion of the theoretical foundation and methodology, please refer to our related paper: [*Peer-induced Fairness: A Causal Approach to Reveal Algorithmic Unfairness in Credit Approval*](https://arxiv.org/abs/2408.02558) (Fang, Chen, & Ansell, 2024).**
 
 
 ## Data
