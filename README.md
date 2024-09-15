@@ -16,9 +16,6 @@ Given its effectiveness and strength, this framework can serve as both an extern
 ![workflow](auditing workflow.png)
 
 
-
-
-
 ## Package Overview
 
 This project comprises several key packages:
