@@ -32,12 +32,12 @@ This project comprises several key packages:
 - **example**: Includes the main experiment demonstrating the framework.
 - **fig**: We put our visualisation results there.
 
----
+
 ## Conclusion
 
 This analysis reveal the effectiveness of our peer-induced fairness auditing framework and the challenging banking environment. 
 
----
+
 
 ## Tools and Version
 
