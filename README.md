@@ -20,7 +20,7 @@ Given its effectiveness and strength, this framework can serve as both an extern
 
 This project comprises several key packages:
 
-- **data**: Contains the datasets required for our empirical analysis, along with the selected features.
+- **datasets**: Contains the datasets required for our empirical analysis, along with the selected features.
 
 > Our framework is validated using data on loan application behaviors of SMEs when interacting with banks. The data, sourced from the UK Data Archive and the SME Finance Monitor, spans the period from 2012 to 2020 and includes 4,500 labeled records.
 [UK Archive and the SME Finance Monitor](https://beta.ukdataservice.ac.uk/datacatalogue/studies/study?id=6888)
