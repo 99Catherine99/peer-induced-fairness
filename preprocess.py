@@ -1,8 +1,12 @@
 import pandas as pd
 import numpy as np
-from sklearn.impute import SimpleImputer
 
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.impute import SimpleImputer, KNNImputer, IterativeImputer
+from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import make_pipeline
+
 
 def combine_data(file_paths, feature_names_paths, common_feature_path):
     """
@@ -33,9 +37,7 @@ def combine_data(file_paths, feature_names_paths, common_feature_path):
     match_dfs[2].loc[match_dfs[2]['final outcomes'] == '6', 'final outcomes'] = '5'
 
 
-    # 将 'annual turnover' 列中的字符串转换为整数
     match_dfs[0]['annual turnover'] = match_dfs[0]['annual turnover'].astype(int)
-    # 找到 'annual turnover' 列中满足条件的行，并将对应值减去 1
     match_dfs[0].loc[(match_dfs[0]['annual turnover'] >= 7) & (match_dfs[0]['annual turnover'] <= 16), 'annual turnover'] -= 1
     match_dfs[0].loc[(match_dfs[0]['credit balance'] == '7'), 'credit balance'] = '6'
     match_dfs[0].loc[(match_dfs[0]['credit balance'] == '8'), 'credit balance'] = '7'
@@ -47,9 +49,6 @@ def combine_data(file_paths, feature_names_paths, common_feature_path):
     match_dfs[0].loc[(match_dfs[0]['credit balance'] == '14'), 'credit balance'] = '13'
     match_dfs[0].loc[(match_dfs[0]['credit balance'] == '15'), 'credit balance'] = '14'
     match_dfs[0].loc[(match_dfs[0]['credit balance'] == '16'), 'credit balance'] = '15'
-
-    # match_dfs[2].loc[(match_dfs[2]['final outcomes'] == '4'), 'final outcomes'] = '1'
-    # match_dfs[2].loc[(match_dfs[2]['final outcomes'] == '5'), 'final outcomes'] = '4'
 
 
     for i in [0,1]:
@@ -69,10 +68,6 @@ def combine_data(file_paths, feature_names_paths, common_feature_path):
         match_dfs[i].loc[(match_dfs[i]['credit balance'] == '12'), 'credit balance'] = '1'
         match_dfs[i].loc[(match_dfs[i]['credit balance'] == '13'), 'credit balance'] = '12'
 
-
-    # print(match_dfs[2]['final outcomes'].unique()) #there is no '6'
-
-    # 将三个DataFrame连接起来
     df_combined = pd.concat(match_dfs, ignore_index=True)
 
     return df_combined
@@ -141,17 +136,13 @@ def check_col_missing_ratio(replacena_df, ratio1):
     keep_columns (list): List of column names to be retained.
     """
 
-    # 计算每个变量的缺失比例
     NAN_ratios = replacena_df.isna().sum() / replacena_df.shape[0]
 
-    # 选择缺失比例小于等于50%的变量
     keep_columns = NAN_ratios[NAN_ratios <= ratio1].index.tolist()
 
-    # 确保"final outcome"这个变量不会被删除
     if "final outcomes" not in keep_columns:
         keep_columns.append("final outcomes")
 
-    # 保留需要的变量并创建新的DataFrame
     del_hmc_df = replacena_df[keep_columns]
 
     return del_hmc_df, NAN_ratios, keep_columns
@@ -187,20 +178,16 @@ def impute_missing_data(del_hmr_df):
     fill_df (pd.DataFrame): DataFrame with imputed missing values.
     """
 
-    # 创建一个包含"final outcomes"列的DataFrame
+
     final_outcomes_df = pd.DataFrame(del_hmr_df['final outcomes']).reset_index(drop=True)
 
-    # 删除"final outcomes"列，并保留其他列
     remaining_df = del_hmr_df.drop('final outcomes', axis=1).reset_index(drop=True)
 
-    # 获取有缺失值的连续变量列
     continuous_columns = remaining_df.columns[remaining_df.isna().any()].tolist()
 
-    # 使用 SimpleImputer 对象对连续变量进行插补
     simple_imputer = SimpleImputer(strategy="most_frequent")
     remaining_df[continuous_columns] = simple_imputer.fit_transform(remaining_df[continuous_columns])
 
-    # 将插补后的数据与"final outcomes"列合并成一个新的DataFrame
     fill_df = pd.concat([remaining_df, final_outcomes_df], axis=1)
 
     return fill_df
@@ -236,14 +223,14 @@ def remove_nan_final_outcomes(int_df):
     delfo5_df is partial dataframe after preprocessing, which contains 'final outcomes' with values
     """
 
-    # 删除final outcomes为空的行
+
     delfona_df = int_df.loc[int_df['final outcomes'].notna(), :]
     delfo5_df = delfona_df[delfona_df['final outcomes'] != 5]
     delfo5_df = delfo5_df[delfona_df['final outcomes'] != 5.0]
     delfo5_df = delfo5_df[delfona_df['final outcomes'] != '5']
-    # 将数据类型转换为整数类型
+
     delfo5_df = delfo5_df.astype(int)
-    # 重置索引
+
     delfo5_df.reset_index(drop=True, inplace=True)
 
     return delfo5_df
@@ -264,7 +251,6 @@ def merge_final_outcomes(delfona_df, int_df):
     part_mergefo_df = delfona_df.copy()
     all_mergefo_df = int_df.copy()
 
-    # 将final outcomes转换为二进制类别变量
     part_mergefo_df['Binary Y'] = np.where(part_mergefo_df['final outcomes'].isin([1, 2]), 1,
                                       np.where(part_mergefo_df['final outcomes'].isin([3, 4]), 0,
                                                part_mergefo_df['final outcomes']))
@@ -291,16 +277,13 @@ def merge_attributes(part_mergefo_df, all_mergefo_df):
     merge_df = part_mergefo_df.copy()
     all_merge_df = all_mergefo_df.copy()
 
-    # 筛选出 'Binary Y' 列中值为 NaN 的行
     int_merge_df = all_merge_df[pd.isna(all_merge_df['Binary Y'])]
-    # 如果需要重置行索引
     int_merge_df = int_merge_df.reset_index(drop=True)
 
 
-    # turnover分析的时候需要，预测的时候还是按照多数进行
-    # 创建映射字典
+
     annual_turnover_mapping = {1: 1, 2: 1, 3: 2, 4: 2, 5: 3, 6: 3, 7: 4, 8: 5, 9: 5, 10: 6, 11: 6, 12: 6}
-    # 使用map函数创建新列
+
     merge_df['new annual turnover'] = merge_df['annual turnover'].map(annual_turnover_mapping)
 
     int_merge_df['new annual turnover'] = int_merge_df['annual turnover'].map(
@@ -340,15 +323,14 @@ def merge_attributes(part_mergefo_df, all_mergefo_df):
     int_merge_df['new age'] = int_merge_df['age'].map({1: 0, 2: 0, 3: 1, 4: 1})
 
     # size
-    # 添加'size'列并设置初始值
     merge_df['size'] = 3
-    # 根据条件设置'size'的值
+
     merge_df.loc[(merge_df['workers number'].between(1, 2)) & (merge_df['annual turnover'].between(1, 8)), 'size'] = 0
     merge_df.loc[(merge_df['workers number'] == 3) & (merge_df['annual turnover'].between(9, 10)), 'size'] = 1
     merge_df.loc[(merge_df['workers number'].between(4, 6)) & (merge_df['annual turnover'].between(11, 12)), 'size'] = 2
 
     int_merge_df['size'] = 3
-    # 根据条件设置'size'的值
+
     int_merge_df.loc[(int_merge_df['workers number'].between(1, 2)) & (int_merge_df['annual turnover'].between(1, 8)), 'size'] = 0
     int_merge_df.loc[(int_merge_df['workers number'] == 3) & (int_merge_df['annual turnover'].between(9, 10)), 'size'] = 1
     int_merge_df.loc[(int_merge_df['workers number'].between(4, 6)) & (int_merge_df['annual turnover'].between(11, 12)), 'size'] = 2
@@ -356,13 +338,6 @@ def merge_attributes(part_mergefo_df, all_mergefo_df):
     # size
     merge_df['new size'] = np.where(merge_df['size'] == 0, 0, 1)
     int_merge_df['new size'] = np.where(int_merge_df['size'] == 0, 0, 1)
-
-    # # 将'merge_df'中'business innovation'为1的值改为0，为0的值改为1
-    # merge_df['business innovation'] = merge_df['business innovation'].replace({0: 1, 1: 0})
-    # int_merge_df['business innovation'] = int_merge_df['business innovation'].replace({0: 1, 1: 0})
-    #
-    # merge_df['product or service development'] = merge_df['product or service development'].replace({0: 1, 1: 0})
-    # int_merge_df['product or service development'] = int_merge_df['product or service development'].replace({0: 1, 1: 0})
 
     merge_df.loc[merge_df['credit purchase'] == 2, 'credit purchase'] = 0
     int_merge_df.loc[int_merge_df['credit purchase'] == 2, 'credit purchase'] = 0
@@ -396,7 +371,6 @@ def export_xlsx(merge_df, int_merge_df):
     - merge_df (DataFrame): Dataframe to export.
     - int_merge_df (DataFrame): Dataframe to export (with NaN removed).
     """
-    # 将DataFrame导出为Excel文件
     merge_df.to_excel('merge_xlsx.xlsx', index=False)
     int_merge_df.to_excel('int_merge_xlsx.xlsx', index=False)
 
@@ -415,7 +389,6 @@ def one_hot_encode_dataframe(df):
 
     encoded_df = pd.get_dummies(df, columns=df.columns)
     return encoded_df
-
 
 
 class FeatureEncoder:
@@ -466,14 +439,7 @@ class FeatureEncoder:
 
 
 
-from sklearn.ensemble import RandomForestRegressor
 
-# To use the experimental IterativeImputer, we need to explicitly ask for it:
-from sklearn.experimental import enable_iterative_imputer  # noqa
-from sklearn.impute import SimpleImputer, KNNImputer, IterativeImputer
-from sklearn.model_selection import cross_val_score
-from sklearn.pipeline import make_pipeline
-import numpy as np
 
 rng = np.random.RandomState(42)
 regressor = RandomForestRegressor(random_state=0)
