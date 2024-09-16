@@ -13,7 +13,7 @@ Given its effectiveness and strength, this framework can serve as both an extern
 
 ## Auditing Workflow
 
-![workflow](auditing workflow.png)
+![workflow](auditing_workflow.png)
 
 
 ## Package Overview
