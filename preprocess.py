@@ -114,10 +114,10 @@ def replace_missing_values(df_replace_dk_refused):
     """
 
     df_replace_dk_refused = df_replace_dk_refused.apply(pd.to_numeric, errors='coerce')
-    # 替换-99.99为NaN
+
     replacena99_df = df_replace_dk_refused.replace(-99.99, np.nan, inplace=False)
     replacena99str_df = replacena99_df.replace('-99.99', np.nan, inplace=False)
-    # 替换空格为NaN
+    
     replacena_df = replacena99str_df.replace(' ', np.nan, inplace=False)
     return replacena_df
 
